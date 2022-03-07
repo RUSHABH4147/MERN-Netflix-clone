@@ -27,7 +27,7 @@ router.delete('/:id', verifyt, async (req, res) => {
       res.status(201).json('List deleted !');
     } catch (error) {
       res.status(500).json(error);
-      console.log(error)
+      console.log(error);
     }
   } else {
     res.status(403).json('You are Not allowed!');
@@ -35,16 +35,30 @@ router.delete('/:id', verifyt, async (req, res) => {
 });
 //Get all lis
 router.get('/', verifyt, async (req, res) => {
- 
-    try {
-      const allist = await List.find();
-      res.status(201).json(allist);
-    } catch (error) {
-      res.status(500).json(error);
-      console.log(error)
+  const typequery = req.query.type;
+  const genrequery = req.query.genre;
+  let list = [];
+  try {
+    if (typequery) {
+      if (genrequery) {
+        list = await List.aggregate([
+          { $sample: { size: 10 } },
+          { $match: { type: typequery, genre: genrequery } },
+        ]);
+      } else {
+        list = await List.aggregate([
+          { $sample: { size: 10 } },
+          { $match: { type: typequery } },
+        ]);
+      }
+    } else {
+      list = await List.aggregate([{ $sample: { size: 10 } }]);
     }
- 
+    res.status(200).json(list);
+  } catch (error) {
+    res.status(500).json(error);
+    console.log(error);
+  }
 });
-
 
 module.exports = router;
